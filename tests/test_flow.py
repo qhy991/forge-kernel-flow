@@ -48,6 +48,46 @@ def test_two_generations_real_flow_and_argv(tmp_path):
     assert sorted(r["payload"]["known_cost"] for r in requests if r["op"] == "allowance") == pytest.approx([0, .01, .02, .03])
 
 
+@pytest.mark.parametrize("unpinned", [False, True], ids=["pinned", "unpinned"])
+def test_second_generation_plan_requires_pinned_knowledge(tmp_path, unpinned):
+    setup(tmp_path, generations=2)
+    worker = fake_worker(tmp_path)
+    original_reply = worker.script.call
+    cited_entry = None
+
+    def reply(prompt, *, output_schema, session):
+        nonlocal cited_entry
+        result = original_reply(prompt, output_schema=output_schema, session=session)
+        data = json.loads(prompt.split("\n", 1)[1])
+        if output_schema.__name__ == "Plan" and data["generation"] == 1:
+            assert len(data["knowledge_snapshot"]) == 1
+            pinned_entry = data["knowledge_snapshot"][0]
+            cited_entry = pinned_entry + "-unpinned" if unpinned else pinned_entry
+            result["decisions"][0]["evidence"] = [cited_entry]
+        return result
+
+    worker.script.call = reply
+    report, _, _ = run(tmp_path, worker=worker)
+    admitted = next(h["entry"] for h in report["history"] if h["kind"] == "knowledge_admitted")
+    assert read(tmp_path)["knowledge"] == [admitted]
+    promotions = [h["generation"] for h in report["history"] if h["kind"] == "promotion"]
+    if unpinned:
+        assert cited_entry not in read(tmp_path)["knowledge"]
+        assert "evidence is outside the admitted task" in report["blocked"]
+        assert promotions == [0]
+        assert len(effects(tmp_path, "evaluate")) == len(effects(tmp_path, "seal")) == 1
+        assert len(worker.prompts) == 3
+    else:
+        assert cited_entry == admitted
+        assert report["blocked"] is None
+        assert report["stopped"] == "generation cap reached"
+        assert promotions == [0, 1]
+        plan = next(h["plan"] for h in report["history"] if h["kind"] == "plan" and h["generation"] == 1)
+        assert plan["decisions"][0]["evidence"] == [admitted]
+        assert len(effects(tmp_path, "evaluate")) == len(effects(tmp_path, "seal")) == 2
+        assert len(worker.prompts) == 4
+
+
 def test_correctness_rejection_restores_permitted_seed(tmp_path):
     setup(tmp_path, generations=1, attempts=1, config={"evaluations": [{"correct": False}]})
     report, _, _ = run(tmp_path)

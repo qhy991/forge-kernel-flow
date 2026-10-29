@@ -9,6 +9,10 @@ description = "A bounded single-worker kernel campaign flow with independent rec
 requires-python = ">=3.12"
 readme = "README.md"
 license = "MIT"
+classifiers = [
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+]
 dependencies = [
   "hmz @ git+https://github.com/humanfia/humanize.git@58dd43a419b9d1967c8028f3b999192b040b7b60",
 ]

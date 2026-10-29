@@ -12,8 +12,9 @@ a task-specific executor with the capabilities in [the protocol](examples/protoc
 
 ## Run the offline demonstration
 
-Use Python 3.12 or newer. The package pins Humanize to the source revision used by
-its actual-runtime tests.
+Use Python 3.12 or newer on macOS or Linux, on storage that supports POSIX file
+locking and directory fsync. The package pins Humanize to the source revision used
+by its actual-runtime tests.
 
 ```bash
 python3 -m venv .venv
@@ -47,6 +48,10 @@ from the worker, including across generations. Separate working directories,
 isolation. Preflight must attest the actual runtime worker and environment
 identities supplied in the request. Unsupported deployments stop before model
 work.
+
+Install and authenticate the chosen Humanize agent backend first. The Codex
+example requires an authenticated Codex CLI available to Humanize. See the pinned
+[Humanize installation guide](https://github.com/humanfia/humanize/blob/58dd43a419b9d1967c8028f3b999192b040b7b60/docs/user/installation.md).
 
 The following command uses the pinned Humanize CLI. Replace the uppercase values
 with deployment bindings before running it. Running this native command can use
@@ -109,9 +114,9 @@ promote a candidate.
 
 Gain uses `reference_time / candidate_time - 1`; incumbent improvement uses the
 same formula with the incumbent timing. Promotion requires a separate confirmation
-job above both the frozen noise and
-target thresholds, followed by a source-bound seal. The original reporting anchor
-never changes. Knowledge proposals enter the next generation's pinned snapshot
+job that exceeds the frozen noise threshold and meets the target gain, followed
+by a source-bound seal. The original reporting anchor never changes. Knowledge
+proposals enter the next generation's pinned snapshot
 only after an independent, source-safe probe and private admission. Probe failure
 retains the negative result and does not fabricate a certified entry.
 

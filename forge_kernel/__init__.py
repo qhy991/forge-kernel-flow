@@ -102,7 +102,6 @@ async def activate(state, store, executor, worker, envs, ctx, schema, role, prom
     result = schema.model_validate(record["result"])
     if not any(u["action"] == turn.id for u in state.usage):
         state.usage.append(record["usage"])
-    # The caller commits this result and its phase transition in one checked save.
     return result
 
 
@@ -157,7 +156,7 @@ async def forge_kernel(task, *, agents, envs, params, ctx):
                 elif phase == "plan":
                     plan = await activate(state, store, executor, agents["worker"], envs, ctx,
                                           Plan, "analysis", worker_prompt(state, "architecture"))
-                    admitted_evidence = set(state.analysis_evidence)
+                    admitted_evidence = set(state.analysis_evidence) | set(state.knowledge)
                     for event in state.history:
                         if event["kind"] == "measurement" and event["generation"] == state.generation:
                             admitted_evidence.update([event["receipt"], *event["result"]["evidence"]])

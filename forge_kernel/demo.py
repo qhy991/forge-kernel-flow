@@ -51,15 +51,15 @@ def fixture_exchange(root: Path, request: dict):
     with Store(root) as store:
         request_file = f"request-{request.id}.json"
         store.write(request_file, request, immutable=True)
-        cached = root / f"effect-{request.id}.json"
-        if cached.exists():
-            return json.loads(cached.read_text())
+        receipt_cache = root / f"effect-{request.id}.json"
+        if receipt_cache.exists():
+            return json.loads(receipt_cache.read_text())
         config = json.loads((root / "config.json").read_text())
         state_path = root / "fixture.json"
         state = json.loads(state_path.read_text()) if state_path.exists() else {"evaluations": 0, "sources": {}, "reference_ticks": 100.0, "effects": [], "receipts": {}}
         if request.id in state["receipts"]:
             receipt = state["receipts"][request.id]
-            store.write(cached.name, receipt, immutable=True)
+            store.write(receipt_cache.name, receipt, immutable=True)
             return receipt
         op, payload = request.op, request.payload
         evidence = [LABEL, f"fixture://{request.id}"]
@@ -143,11 +143,9 @@ def fixture_exchange(root: Path, request: dict):
         receipt = {"request_id": request.id, "request_digest": digest(request), "issuer": "offline-fixture",
                    "status": "final", "job": "fixture-job:" + request.id, "payload": out}
         state["effects"].append({"request": request.id, "op": op})
-        # One transaction owns both the result and fixture state; reconcile that result
-        # before another effect if the separate receipt cache write was interrupted.
         state["receipts"][request.id] = receipt
         store.write("fixture.json", state)
-        store.write(cached.name, receipt, immutable=True)
+        store.write(receipt_cache.name, receipt, immutable=True)
         return receipt
 
 
