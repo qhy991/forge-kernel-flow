@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forge-kernel-flow"
+version = "0.1.0"
+description = "A bounded single-worker kernel campaign flow with independent receipts"
+requires-python = ">=3.12"
+readme = "README.md"
+license = "MIT"
+dependencies = [
+  "hmz @ git+https://github.com/humanfia/humanize.git@58dd43a419b9d1967c8028f3b999192b040b7b60",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+include = ["forge_kernel*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+forge_kernel = ["agent.md"]

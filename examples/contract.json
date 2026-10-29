@@ -1,0 +1,19 @@
+{
+  "operator": {"name": "sum", "shape": [4], "precision": "float64", "domain": "finite CPU fixture vectors"},
+  "reference": "fixture-reference-v0",
+  "reporting_anchor": "fixture-reference-v0",
+  "judge": "fixture-cpu-correctness-v1",
+  "protocol": "synthetic-ticks-v1",
+  "hardware": "NO-GPU-fixture",
+  "executor_argv": ["/usr/bin/python3", "-m", "forge_kernel.demo", "--executor-root", "/tmp/forge-kernel-demo/executor"],
+  "issuer": "offline-fixture",
+  "required_gates": ["correctness", "state"],
+  "noise": 0.02,
+  "target_gain": 0.05,
+  "generations": 2,
+  "attempts": 3,
+  "plateau": 2,
+  "model_cost_limit": 2.0,
+  "task_instructions": "This is a CPU software fixture. Do not claim hardware performance.",
+  "knowledge_snapshot": []
+}
